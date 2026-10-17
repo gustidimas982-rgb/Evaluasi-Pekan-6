@@ -810,3 +810,259 @@ Pertanyaan:
    dan sisa bagi (%). Namun, for...of dan while tetap
    digunakan karena diminta dalam latihan.
 */
+
+//==== BAGIAN 4 ====
+
+//=== Membuat Object Laporan ===
+
+const laporan = {
+    jumlahTransaksi: kasir.riwayat.length,
+
+    jumlahLunas: 0,
+    jumlahKurang: 0,
+    jumlahDitolak: 0,
+
+    pendapatan: 0,
+    rataRata: 0,
+    transaksiTerbesar: null,
+
+    penjualanPerMenu: {},
+    menuTerlaris: "",
+
+    daftarDitolak: [],
+    kodeLunas: [],
+    ringkasanKode: "",
+
+    menuStokMenipis: []
+};
+
+//=== Mengolah Riwayat Transaksi ===
+
+for (const trx of kasir.riwayat) {
+    if (trx.status === "LUNAS") {
+        laporan.jumlahLunas++;
+
+        laporan.pendapatan += trx.total;
+
+        laporan.kodeLunas.push(trx.kode);
+
+        if (
+            laporan.transaksiTerbesar === null ||
+            trx.total > laporan.transaksiTerbesar.total
+        ) {
+            laporan.transaksiTerbesar = trx;
+        }
+
+        for (const item of trx.itemValid) {
+            if (item.menu in laporan.penjualanPerMenu) {
+                laporan.penjualanPerMenu[item.menu] += item.jumlah;
+            } else {
+                laporan.penjualanPerMenu[item.menu] = item.jumlah;
+            }
+        }
+
+    } else if (trx.status === "KURANG") {
+        laporan.jumlahKurang++;
+
+    } else if (trx.status === "DITOLAK") {
+        laporan.jumlahDitolak++;
+
+        laporan.daftarDitolak.push({
+            kode: trx.kode,
+            alasan: trx.alasan
+        });
+    }
+}
+
+//=== Menghitung Rata-Rata Pendapatan ===
+
+if (laporan.jumlahLunas > 0) {
+    laporan.rataRata = Number(
+        (laporan.pendapatan / laporan.jumlahLunas).toFixed(0)
+    );
+}
+
+//=== Menentukan Menu Terlaris ===
+
+let jumlahTerjualTerbanyak = 0;
+
+for (const namaMenu in laporan.penjualanPerMenu) {
+    if (
+        laporan.penjualanPerMenu[namaMenu] >
+        jumlahTerjualTerbanyak
+    ) {
+        jumlahTerjualTerbanyak =
+            laporan.penjualanPerMenu[namaMenu];
+
+        laporan.menuTerlaris = namaMenu;
+    }
+}
+
+
+//=== Membuat Ringkasan Kode Transaksi ===
+// Menggunakan perulangan dan operator +=
+
+for (let i = 0; i < laporan.kodeLunas.length; i++) {
+    if (i > 0) {
+        laporan.ringkasanKode += ", ";
+    }
+
+    laporan.ringkasanKode += laporan.kodeLunas[i];
+}
+
+//=== Mencari Menu dengan Stok Menipis ===
+
+for (const item of kasir.menu) {
+    if (item.stok < 3) {
+        laporan.menuStokMenipis.push(item.nama);
+    }
+}
+
+//=== Cetak Laporan Harian ===
+
+console.log("\n");
+console.log("==============================================");
+
+console.log(`
+${kedai.nama.toUpperCase()}
+LAPORAN HARIAN
+==============================================
+Jumlah seluruh transaksi : ${laporan.jumlahTransaksi}
+Transaksi lunas           : ${laporan.jumlahLunas}
+Transaksi kurang          : ${laporan.jumlahKurang}
+Transaksi ditolak         : ${laporan.jumlahDitolak}
+
+Pendapatan                : ${formatRupiah(laporan.pendapatan)}
+Rata-rata transaksi lunas : ${formatRupiah(laporan.rataRata)}
+
+Transaksi terbesar:
+${laporan.transaksiTerbesar
+    ? `${laporan.transaksiTerbesar.kode} - ${formatRupiah(laporan.transaksiTerbesar.total)}`
+    : "Belum ada transaksi lunas"}
+
+Menu terlaris             : ${laporan.menuTerlaris || "Belum ada penjualan"}
+Jumlah terjual terbanyak  : ${jumlahTerjualTerbanyak}
+
+Kode transaksi lunas      : ${laporan.ringkasanKode || "Tidak ada"}
+==============================================
+`);
+
+//=== Cetak Penjualan per Menu Menggunakan for...in ===
+
+console.log("PENJUALAN PER MENU");
+
+for (const namaMenu in laporan.penjualanPerMenu) {
+    console.log(
+        `${namaMenu}: ${laporan.penjualanPerMenu[namaMenu]} terjual`
+    );
+}
+
+//=== Object Keys dan Values ===
+
+console.log("\nKUNCI PENJUALAN PER MENU:");
+console.log(Object.keys(laporan.penjualanPerMenu));
+
+console.log("\nNILAI PENJUALAN PER MENU:");
+console.log(Object.values(laporan.penjualanPerMenu));
+
+//=== Memeriksa Jumlah Kode ===
+
+const jumlahKodeRingkasan =
+    laporan.ringkasanKode === ""
+        ? 0
+        : laporan.ringkasanKode.split(", ").length;
+
+console.log("\nPEMERIKSAAN RINGKASAN KODE");
+console.log("Jumlah kode dalam ringkasan:", jumlahKodeRingkasan);
+console.log("Jumlah transaksi lunas:", laporan.jumlahLunas);
+console.log(
+    "Apakah jumlahnya sama?",
+    jumlahKodeRingkasan === laporan.jumlahLunas
+);
+
+//=== Demo Array Method ===
+
+console.log("\nDEMO ARRAY METHOD");
+
+console.log(
+    "Array kodeLunas asli:",
+    laporan.kodeLunas
+);
+
+// includes(): memeriksa apakah kode terdapat dalam array.
+const kodeContoh = laporan.kodeLunas[0];
+
+console.log(
+    `includes("${kodeContoh}"):`,
+    laporan.kodeLunas.includes(kodeContoh)
+);
+
+// indexOf(): mencari indeks kode.
+console.log(
+    `indexOf("${kodeContoh}"):`,
+    laporan.kodeLunas.indexOf(kodeContoh)
+);
+
+// slice(): mengambil dua kode pertama tanpa mengubah array asli.
+const duaKodePertama = laporan.kodeLunas.slice(0, 2);
+
+console.log("Dua kode pertama:", duaKodePertama);
+console.log("Array asli setelah slice:", laporan.kodeLunas);
+
+// splice(): menghapus kode pertama dari salinan array.
+const salinanKode = laporan.kodeLunas.slice();
+
+const kodeTerhapus = salinanKode.splice(0, 1);
+
+console.log("Kode yang dihapus dari salinan:", kodeTerhapus);
+console.log("Salinan setelah splice:", salinanKode);
+console.log("Array asli setelah splice:", laporan.kodeLunas);
+
+//=== Daftar Transaksi Ditolak ===
+
+console.log("\nDAFTAR TRANSAKSI DITOLAK");
+console.table(laporan.daftarDitolak);
+
+//=== Menu Stok Menipis ===
+
+console.log("\nMENU DENGAN STOK KURANG DARI 3");
+console.log(laporan.menuStokMenipis);
+
+//=== Object Laporan Lengkap ===
+
+console.log("\nOBJECT LAPORAN LENGKAP");
+console.log(laporan);
+
+/*
+Pertanyaan:
+1. Object digunakan untuk menyimpan nama menu dan jumlah
+   yang terjual. Dengan begitu, jumlah penjualan bisa dicari
+   berdasarkan nama menu.
+
+   Bracket notation digunakan karena nama menu diambil
+   dari variabel item.menu.
+
+2. Object.keys() mengambil nama properti dari object.
+   Object.values() mengambil nilai dari properti tersebut.
+
+   Dalam kode ini:
+   - Object.keys() menampilkan nama menu.
+   - Object.values() menampilkan jumlah yang terjual.
+
+3. includes(), indexOf(), dan slice() tidak mengubah array asli.
+   Sedangkan splice() mengubah array yang digunakan.
+
+   Karena splice() digunakan pada salinan array, array
+   kodeLunas yang asli tetap aman dan tidak berubah.
+
+4. toFixed() menghasilkan teks (string), bukan angka.
+   Karena rataRata harus berupa angka, hasilnya diubah
+   menggunakan Number() agar bisa dihitung dengan benar.
+
+5. Jika ringkasan kode transaksi LUNAS dibuat dengan benar,
+   jumlah kode akan sama dengan jumlahLunas dan hasilnya true.
+
+   Jika ringkasan kosong, jumlahnya dihitung sebagai 0.
+   Pemisah ", " digunakan agar kode transaksi bisa dipisahkan
+   dan dihitung kembali menggunakan split().
+*/
